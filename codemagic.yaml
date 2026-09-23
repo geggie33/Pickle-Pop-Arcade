@@ -4,7 +4,13 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
 
+    integrations:
+      app_store_connect: Codemagic Pickle Pop
+
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.geraldwinans.picklepop
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
@@ -23,17 +29,16 @@ workflows:
           npx cap add ios
           npx cap sync ios
 
-      - name: Build iOS
+      - name: Set up code signing
         script: |
-          cd ios/App
-          xcodebuild \
-            -workspace App.xcworkspace \
-            -scheme App \
-            -sdk iphoneos \
-            -configuration Release \
-            CODE_SIGNING_ALLOWED=NO \
-            archive \
-            -archivePath $CM_BUILD_DIR/build/App.xcarchive
+          xcode-project use-profiles
+
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
 
     artifacts:
-      - build/**
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
