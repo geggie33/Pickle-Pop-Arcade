@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#102a43">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Pickle Pop">
+  <title>Pickle Pop</title>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="app">
+    <header>
+      <div class="title-row">
+        <div>
+          <h1>Pickle Pop</h1>
+          <span id="modeLabel" class="mode-label">Choose level</span>
+        </div>
+        <button id="challengesButton" class="text-button challenges-button" aria-label="Open challenges">🏆 Challenges</button>
+      </div>
+      <div class="header-controls">
+        <button id="modeButton" class="text-button menu-button" aria-label="Stop match and choose a level">MENU</button>
+        <button id="serveSpeedButton" class="text-button" aria-label="Change serve speed">Serve: Normal</button>
+        <button id="randomButton" class="text-button" aria-label="Toggle random serve speeds">Random serves: Off</button>
+        <button id="facesButton" class="icon-button" aria-label="Choose player faces">🙂</button>
+        <button id="soundButton" class="icon-button" aria-label="Toggle sound">🔊</button>
+      </div>
+    </header>
+
+    <section id="scoreboard" aria-label="Scoreboard">
+      <div><span>You</span><strong id="playerScore">0</strong></div>
+      <div class="serve-status"><span id="serverLabel">YOUR SERVE</span><small>First to 11 · win by 2</small></div>
+      <div><span>Rival</span><strong id="aiScore">0</strong></div>
+    </section>
+
+    <section id="gameShell">
+      <canvas id="court" width="720" height="1120" aria-label="Pickleball court"></canvas>
+      <div id="modeMenu" class="mode-menu">
+        <strong>Choose your match</strong>
+        <span>MENU stops any game or lesson so you can change levels.</span>
+        <button data-level="learn"><b>HOW TO PLAY</b><small>Guided first match</small></button>
+        <button data-level="beginner"><b>BEGINNER</b><small>Relaxed play · optional random serves</small></button>
+        <button data-level="club"><b>CLUB PLAYER</b><small>Faster · 50% random returns</small></button>
+        <button data-level="pro"><b>PRO</b><small>10% faster · every serve and return random</small></button>
+      </div>
+      <div id="message" class="message">
+        <strong id="messageTitle">Welcome to Pickle Pop!</strong>
+        <span id="messageBody">Drag the paddle with your finger. Keep it between the ball and your baseline.</span>
+        <button id="messageButton">LET'S PLAY</button>
+      </div>
+      <div id="challengePanel" class="challenge-panel hidden" aria-label="Challenges">
+        <div class="challenge-heading">
+          <div><strong>🏆 CHALLENGES</strong><span>Play. Make progress. Unlock rewards.</span></div>
+          <button id="challengeCloseButton" class="challenge-close" aria-label="Close challenges">✕</button>
+        </div>
+        <div class="challenge-guide">
+          <b>HOW CHALLENGES WORK</b>
+          <span><strong>1. PLAY</strong> — Choose Beginner, Club or Pro and finish matches.</span>
+          <span><strong>2. COMPLETE</strong> — Each card tells you exactly what counts. A loss resets consecutive-win challenges.</span>
+          <span><strong>3. UNLOCK</strong> — Finish a challenge and its reward stays unlocked on this device.</span>
+          <span><strong>4. EQUIP</strong> — Use MY REWARDS below to choose the ball or paddle you want in your next match.</span>
+          <span><strong>5. RETURN</strong> — Finish at least one match each day to grow your Daily Streak.</span>
+        </div>
+        <div class="streak-card">
+          <b>🔥 DAILY STREAK</b>
+          <span id="streakProgress">0 day streak</span>
+          <small id="streakBest">Best: 0 days · Complete one match each day to keep it growing.</small>
+        </div>
+        <div class="challenge-list">
+          <div id="warmupChallenge" class="challenge-card"><b>🎯 GETTING WARMED UP</b><span>Win 2 consecutive matches on Beginner or higher</span><small id="warmupProgress">0 / 2 wins · Reward: 🔥 Fire Ball</small></div>
+          <div id="proChallenge" class="challenge-card"><b>💪 PRO CHALLENGE</b><span>Score 7 points in one match against Pro</span><small id="proProgress">Best: 0 / 7 · Reward: ⚡ Lightning Ball</small></div>
+          <div id="allCourtChallenge" class="challenge-card"><b>🥒 GOLD PADDLE CHALLENGE</b><span>WIN one complete match at EACH level: Beginner, Club &amp; Pro</span><small id="allCourtProgress">0 / 3 levels won · Reward: 🏆 Gold Paddle</small></div>
+        </div>
+        <div id="rewardShelf" class="reward-shelf"><b>🎁 MY REWARDS</b><small>Tap EQUIP to use an unlocked reward in your next match.</small><div class="reward-row"><span>⚪ Normal Ball</span><button id="normalBallEquip" type="button">EQUIPPED</button></div><div class="reward-row"><span id="fireReward">🔒 Fire Ball · Win 2 consecutive matches</span><button id="fireBallEquip" type="button" disabled>LOCKED</button></div><div class="reward-row"><span id="lightningReward">🔒 Lightning Ball · Score 7 against Pro</span><button id="lightningBallEquip" type="button" disabled>LOCKED</button></div><div class="reward-row"><span>🏓 Normal Paddle</span><button id="normalPaddleEquip" type="button">EQUIPPED</button></div><div class="reward-row"><span id="goldReward">🔒 Gold Paddle · Win Beginner + Club + Pro</span><button id="goldPaddleEquip" type="button" disabled>LOCKED</button></div></div>
+        <p class="challenge-note">Challenges track automatically. Progress and unlocked rewards stay saved on this device.</p>
+        <button id="challengeDoneButton" class="challenge-done">BACK TO GAME</button>
+      </div>
+      <div id="emojiPanel" class="emoji-panel hidden" aria-label="Choose player faces">
+        <strong>Choose faces</strong>
+        <span>You</span>
+        <div class="emoji-row" data-side="player">
+          <button class="selected">🙂</button><button>😎</button><button>🤠</button><button>🤓</button><button>🥸</button><button>😈</button>
+        </div>
+        <span>Rival</span>
+        <div class="emoji-row" data-side="rival">
+          <button>🙂</button><button class="selected">😎</button><button>🤠</button><button>🤓</button><button>🥸</button><button>😈</button>
+        </div>
+        <button id="emojiDoneButton" class="emoji-done">DONE</button>
+      </div>
+      <button id="serveButton" class="serve-button hidden">TAP TO SERVE</button>
+    </section>
+
+    <footer>
+      <button id="restartButton" class="text-button">Restart match</button>
+      <span id="rallyLabel">Rally: 0</span>
+    </footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
