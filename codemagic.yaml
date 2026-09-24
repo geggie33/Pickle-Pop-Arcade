@@ -11,10 +11,10 @@ workflows:
       ios_signing:
         
         
-        provisioning_profiles:
-          -"Pickle Pop App Store"
-        certificates:
-          -"Pickle Pop Distributions"
+              provisioning_profiles: ["Pickle Pop App Store"]
+          
+              certificates: ["Pickle Pop Distributions"]
+          
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
