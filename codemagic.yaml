@@ -11,6 +11,10 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.geraldwinans.picklepop
+        provisioning_profiles:
+          -"Pickle Pop App Store"
+        certificates:
+          -"Pickle Pop Distributions"
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
