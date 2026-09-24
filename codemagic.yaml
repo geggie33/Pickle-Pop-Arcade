@@ -9,8 +9,8 @@ workflows:
 
     environment:
       ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.geraldwinans.picklepop
+        
+        
         provisioning_profiles:
           -"Pickle Pop App Store"
         certificates:
