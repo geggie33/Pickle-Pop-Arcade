@@ -11,7 +11,7 @@ workflows:
       ios_signing:
         
         
-              provisioning_profiles: ["Pickle Pop App Store 2026 Final"]
+              provisioning_profiles: ["Pickle Pop App Store Final"]
           
               certificates: ["Pickle Pop Distributions"]
           
