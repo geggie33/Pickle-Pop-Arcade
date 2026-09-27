@@ -28,10 +28,14 @@ workflows:
         script: |
           npm run build
 
+      
       - name: Add iOS platform
         script: |
           npx cap add ios
-          npx cap sync ios
+          npx cap sync ios      
+          - name: Set iOS build number
+        script: |
+          agvtool new-version -all 2
 
       - name: Set up code signing
         script: |
