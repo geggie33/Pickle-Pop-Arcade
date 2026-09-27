@@ -33,7 +33,7 @@ workflows:
         script: |
           npx cap add ios
           npx cap sync ios      
-     - name: Set iOS build number
+      - name: Set iOS build number
         script: |
           cd ios/App
           agvtool new-version -all 2
