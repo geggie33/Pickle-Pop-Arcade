@@ -1,3 +1,6 @@
+import { Purchases } from '@revenuecat/purchases-capacitor';
+const REVENUECAT_API_KEY = 'appl_ZzGjPVuwubCFaJJolPSvrIzdXxg';
+Purchases.configure({ apiKey: REVENUECAT_API_KEY });
 (() => {
   "use strict";
 
