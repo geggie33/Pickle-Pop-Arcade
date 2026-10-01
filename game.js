@@ -611,6 +611,7 @@ eti;
     console.error("RevenueCat paywall error:", error);
   }
 }
+  document.getElementById("premiumBtn")?.addEventListener("click", openPremiumPaywall);
   
   updateChallengeUI(); updateUI(); draw(); requestAnimationFrame(frame);
 })();
