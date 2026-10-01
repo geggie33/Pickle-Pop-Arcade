@@ -1,4 +1,5 @@
 import { Purchases } from '@revenuecat/purchases-capacitor';
+import { RevenueCatUI } from '@revenuecat/purchases-capacitor-ui';
 const REVENUECAT_API_KEY = 'appl_ZzGjPVuwubCFaJJolPSvrIzdXxg';
 Purchases.configure({ apiKey: REVENUECAT_API_KEY });
 (() => {
@@ -603,5 +604,13 @@ eti;
     ui.modeMenu.classList.remove("hidden");
   });
 
+ async function openPremiumPaywall() {
+  try {
+    await RevenueCatUI.presentPaywall();
+  } catch (error) {
+    console.error("RevenueCat paywall error:", error);
+  }
+}
+  
   updateChallengeUI(); updateUI(); draw(); requestAnimationFrame(frame);
 })();
