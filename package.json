@@ -5,6 +5,7 @@
   "scripts": {
     "start": "vite",
     "build": "vite build"
+    },
   "dependencies": {
   "@capacitor/core": "^7.0.0",
   "@revenuecat/purchases-capacitor": "^11.2.1",
