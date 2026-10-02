@@ -37,7 +37,7 @@ workflows:
       - name: Set iOS build number
         script: |
           cd ios/App
-          agvtool new-version -all 3
+          agvtool new-version -all 4
           
 
       - name: Set up code signing
