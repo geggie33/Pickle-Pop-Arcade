@@ -140,6 +140,10 @@ Purchases.configure({ apiKey: REVENUECAT_API_KEY });
 
   function recordCompletedMatch(playerWon) {
     if (level === "learn") return null;
+    const freeGamesPlayed = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
+if (freeGamesPlayed < 2) {
+  localStorage.setItem("picklePopFreeGamesPlayed", String(freeGamesPlayed + 1));
+}
     recordDailyPlay();
     if (!challengeState.levelsPlayed.includes(level)) challengeState.levelsPlayed.push(level);
     if (playerWon && !challengeState.levelsWon.includes(level)) challengeState.levelsWon.push(level);
@@ -507,6 +511,13 @@ eti;
   }
 
   function chooseLevel(nextLevel) {
+    const freeGamesPlayed = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
+const isPremium = localStorage.getItem("picklePopPremium") === "true";
+
+if (nextLevel !== "learn" && freeGamesPlayed >= 2 && !isPremium) {
+  openPremiumPaywall();
+  return;
+}
     level = nextLevel;
     ui.modeLabel.textContent = modeLabels[level];
     ui.random.disabled = level === "pro";
@@ -556,6 +567,11 @@ eti;
   });
   let challengeWasRunning = false;
   function openChallenges() {
+    const isPremium = localStorage.getItem("picklePopPremium") === "true";
+if (!isPremium) {
+  openPremiumPaywall();
+  return;
+}
     challengeWasRunning = running;
     running = false;
     ui.serve.classList.add("hidden");
@@ -569,6 +585,11 @@ eti;
   }
 
   function equipReward(kind, value) {
+    const isPremium = localStorage.getItem("picklePopPremium") === "true";
+if (!isPremium) {
+  openPremiumPaywall();
+  return;
+}
     if (kind === "ball") {
       if (value === "fire" && !challengeState.fireBall) return;
       if (value === "lightning" && !challengeState.lightningBall) return;
@@ -603,14 +624,23 @@ eti;
     ui.challengePanel.classList.add("hidden");
     ui.modeMenu.classList.remove("hidden");
   });
-
- async function openPremiumPaywall() {
+async function openPremiumPaywall() {
   try {
     await RevenueCatUI.presentPaywall();
+    const customerInfo = await Purchases.getCustomerInfo();
+
+    if (
+      customerInfo?.customerInfo?.entitlements?.active?.[
+        "Pickle_Pop_Archade_Pro"
+      ]
+    ) {
+      localStorage.setItem("picklePopPremium", "true");
+    }
   } catch (error) {
     console.error("RevenueCat paywall error:", error);
   }
 }
+ 
   document.getElementById("premiumBtn")?.addEventListener("click", openPremiumPaywall);
   
   updateChallengeUI(); updateUI(); draw(); requestAnimationFrame(frame);
