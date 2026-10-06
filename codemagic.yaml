@@ -1,5 +1,5 @@
 workflows:
-  ios-workflow:
+  ios-workflow:agvtool new-version
     name: Pickle Pop Arcade iOS
     max_build_duration: 60
     instance_type: mac_mini_m2
@@ -38,7 +38,7 @@ workflows:
       - name: Set iOS build number
         script: |
           cd ios/App
-          agvtool new-version -all 5
+          agvtool new-version -all 6
           
 
       - name: Set up code signing
