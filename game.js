@@ -1,6 +1,5 @@
 import { Purchases } from '@revenuecat/purchases-capacitor';
-import { RevenueCatUI } from '@revenuecat/purchases-capacitor-ui';
-const REVENUECAT_API_KEY = 'appl_ZzGjPVuwubCFaJJolPSvrIzdXxg';
+import { RevenueCatUI } from '@revenuecat/purchases-capacitor-ui';premiumBtn
 Purchases.configure({ apiKey: REVENUECAT_API_KEY });
 (() => {
   "use strict";
@@ -642,6 +641,25 @@ async function openPremiumPaywall() {
 }
  
   document.getElementById("premiumBtn")?.addEventListener("click", openPremiumPaywall);
+  document.getElementById("restorePurchasesBtn")?.addEventListener("click", async () => {
+  try {
+    const result = await Purchases.restorePurchases();
+
+    if (
+      result?.customerInfo?.entitlements?.active?.[
+        "Pickle_Pop_Archade_Pro"
+      ]
+    ) {
+      localStorage.setItem("picklePopPremium", "true");
+      alert("Premium restored successfully!");
+    } else {
+      alert("No active Premium purchase was found.");
+    }
+  } catch (error) {
+    console.error("Restore purchases error:", error);
+    alert("Unable to restore purchases right now.");
+  }
+});
   
   updateChallengeUI(); updateUI(); draw(); requestAnimationFrame(frame);
 })();
