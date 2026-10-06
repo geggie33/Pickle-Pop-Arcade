@@ -1,6 +1,20 @@
 import { Purchases } from '@revenuecat/purchases-capacitor';
-import { RevenueCatUI } from '@revenuecat/purchases-capacitor-ui';premiumBtn
+import { RevenueCatUI } from '@revenuecat/purchases-capacitor-ui';
 Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+async function refreshPremiumStatus() {
+  try {
+    const customerInfo = await Purchases.getCustomerInfo();
+    const isPremium = !!customerInfo?.customerInfo?.entitlements?.active?.[
+      "Pickle_Pop_Archade_Pro"
+    ];
+
+    localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
+  } catch (error) {
+    console.error("Premium status check error:", error);
+  }
+}
+
+refreshPremiumStatus();
 (() => {
   "use strict";
 
