@@ -1,6 +1,16 @@
-import { Purchases } from '@revenuecat/purchases-capacitor';
-import { RevenueCatUI } from '@revenuecat/purchases-capacitor-ui';
-Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+let Purchases;
+let RevenueCatUI;
+if (window.Capacitor?.isNativePlatform?.()) {
+  import('@revenuecat/purchases-capacitor-ui').then(module => {
+    RevenueCatUI = module.RevenueCatUI;
+  });
+}
+if (window.Capacitor?.isNativePlatform?.()) {
+  import('@revenuecat/purchases-capacitor').then(({ Purchases: nativePurchases }) => {
+    Purchases = nativePurchases;
+    return Purchases.configure({ apiKey: REVENUECAT_API_KEY }).then(() => refreshPremiumStatus());
+  });
+}
 async function refreshPremiumStatus() {
   try {
     const customerInfo = await Purchases.getCustomerInfo();
@@ -14,7 +24,7 @@ async function refreshPremiumStatus() {
   }
 }
 
-refreshPremiumStatus();
+
 (() => {
   "use strict";
 
@@ -638,6 +648,7 @@ if (!isPremium) {
     ui.modeMenu.classList.remove("hidden");
   });
 async function openPremiumPaywall() {
+ if (!RevenueCatUI) return alert("Premium purchases are available in the installed app.");
   try {
     await RevenueCatUI.presentPaywall();
     const customerInfo = await Purchases.getCustomerInfo();
