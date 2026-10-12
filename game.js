@@ -1,29 +1,50 @@
-let Purchases;
-let RevenueCatUI;
-if (window.Capacitor?.isNativePlatform?.()) {
-  import('@revenuecat/purchases-capacitor-ui').then(module => {
-    RevenueCatUI = module.RevenueCatUI;
-  });
-}
-if (window.Capacitor?.isNativePlatform?.()) {
-  import('@revenuecat/purchases-capacitor').then(({ Purchases: nativePurchases }) => {
-    Purchases = nativePurchases;
-    return Purchases.configure({ apiKey: REVENUECAT_API_KEY }).then(() => refreshPremiumStatus());
-  });
-}
-async function refreshPremiumStatus() {
-  try {
-    const customerInfo = await Purchases.getCustomerInfo();
-    const isPremium = !!customerInfo?.customerInfo?.entitlements?.active?.[
-      "Pickle_Pop_Archade_Pro"
-    ];
+const REVENUECAT_ENTITLEMENT = "pickle_pop_arcade_pro";
+const REVENUECAT_API_KEY = import.meta.env.VITE_REVENUECAT_API_KEY || "";
+const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
+let purchasesReady;
+let paywallReady;
 
-    localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
-  } catch (error) {
-    console.error("Premium status check error:", error);
+function premiumErrorMessage(error) {
+  console.error("Pickle Pop Premium error:", error);
+  alert("Premium is temporarily unavailable. Please try again later.");
+}
+
+async function getPurchases() {
+  if (!isNativeApp) throw new Error("Purchases require the installed iOS app.");
+  if (!purchasesReady) {
+    purchasesReady = (async () => {
+      if (!REVENUECAT_API_KEY) throw new Error("Missing VITE_REVENUECAT_API_KEY build setting");
+      const { Purchases } = await import("@revenuecat/purchases-capacitor");
+      await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+      return Purchases;
+    })().catch(error => { purchasesReady = null; throw error; });
   }
+  return purchasesReady;
 }
 
+async function getPaywall() {
+  if (!paywallReady) {
+    paywallReady = import("@revenuecat/purchases-capacitor-ui")
+      .then(module => module.RevenueCatUI)
+      .catch(error => { paywallReady = null; throw error; });
+  }
+  return paywallReady;
+}
+
+function isPremiumCustomer(info) {
+  return !!info?.entitlements?.active?.[REVENUECAT_ENTITLEMENT];
+}
+
+async function refreshPremiumStatus() {
+  const purchases = await getPurchases();
+  const response = await purchases.getCustomerInfo();
+  const isPremium = isPremiumCustomer(response?.customerInfo);
+  localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
+  return isPremium;
+}
+
+// Initialize without allowing an unavailable purchase service to crash gameplay.
+if (isNativeApp) refreshPremiumStatus().catch(error => console.error("Premium initialization:", error));
 
 (() => {
   "use strict";
@@ -648,43 +669,37 @@ if (!isPremium) {
     ui.modeMenu.classList.remove("hidden");
   });
 async function openPremiumPaywall() {
- if (!RevenueCatUI) return alert("Premium purchases are available in the installed app.");
-  try {
-    await RevenueCatUI.presentPaywall();
-    const customerInfo = await Purchases.getCustomerInfo();
-
-    if (
-      customerInfo?.customerInfo?.entitlements?.active?.[
-        "Pickle_Pop_Archade_Pro"
-      ]
-    ) {
-      localStorage.setItem("picklePopPremium", "true");
+    if (!isNativeApp) {
+      alert("Premium purchases are available in the installed iPhone app.");
+      return;
     }
-  } catch (error) {
-    console.error("RevenueCat paywall error:", error);
+    try {
+      // Wait for RevenueCat configuration before displaying its native UI.
+      await getPurchases();
+      const ui = await getPaywall();
+      await ui.presentPaywall();
+      await refreshPremiumStatus();
+    } catch (error) {
+      premiumErrorMessage(error);
+    }
   }
-}
- 
+
   document.getElementById("premiumBtn")?.addEventListener("click", openPremiumPaywall);
   document.getElementById("restorePurchasesBtn")?.addEventListener("click", async () => {
-  try {
-    const result = await Purchases.restorePurchases();
-
-    if (
-      result?.customerInfo?.entitlements?.active?.[
-        "Pickle_Pop_Archade_Pro"
-      ]
-    ) {
-      localStorage.setItem("picklePopPremium", "true");
-      alert("Premium restored successfully!");
-    } else {
-      alert("No active Premium purchase was found.");
+    if (!isNativeApp) {
+      alert("Restore Purchases is available in the installed iPhone app.");
+      return;
     }
-  } catch (error) {
-    console.error("Restore purchases error:", error);
-    alert("Unable to restore purchases right now.");
-  }
-});
+    try {
+      const purchases = await getPurchases();
+      const response = await purchases.restorePurchases();
+      const isPremium = isPremiumCustomer(response?.customerInfo);
+      localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
+      alert(isPremium ? "Premium restored successfully!" : "No active Premium purchase was found.");
+    } catch (error) {
+      premiumErrorMessage(error);
+    }
+  });
   
   updateChallengeUI(); updateUI(); draw(); requestAnimationFrame(frame);
 })();
