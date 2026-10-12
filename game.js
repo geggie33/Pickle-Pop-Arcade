@@ -1,4 +1,4 @@
-const REVENUECAT_ENTITLEMENT = "Pickle_Pop_Archade_Pro";
+const REVENUECAT_ENTITLEMENT = "pickle_pop_arcade_pro";
 const REVENUECAT_API_KEY = import.meta.env.VITE_REVENUECAT_API_KEY || "";
 const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
 let purchasesReady;
