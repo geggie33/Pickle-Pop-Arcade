@@ -11,12 +11,8 @@ workflows:
       groups:
         - revenuecat
       ios_signing:
-        
-        
-              provisioning_profiles: ["Pickle Pop App Store Final"]
-          
-              certificates: ["Pickle Pop Distributions"]
-          
+        provisioning_profiles: ["Pickle Pop App Store Final"]
+        certificates: ["Pickle Pop Distributions"]
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
@@ -36,14 +32,14 @@ workflows:
           npx cap add ios
           sed -i '' "s/platform :ios, '[0-9.]*'/platform :ios, '15.0'/" ios/App/Podfile
           npx cap sync ios
-              sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' ios/App/App.xcodeproj/project.pbxproj
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' ios/App/App.xcodeproj/project.pbxproj
       - name: Install Pickle Pop icon
         script: |
           mkdir -p assets && cp Pickle_Pop_App_Icon_1024.png assets/icon.png && npx capacitor-assets generate --ios
       - name: Set iOS build number
         script: |
           cd ios/App
-          agvtool new-version -all 7
+          agvtool new-version -all 9
           
 
       - name: Set up code signing
