@@ -1,12 +1,33 @@
 const REVENUECAT_ENTITLEMENT = "pickle_pop_arcade_pro";
 const REVENUECAT_API_KEY = import.meta.env.VITE_REVENUECAT_API_KEY || "";
-const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
+const isNativeApp = !!window.Capacitor?.isNativePlatform?.() || window.Capacitor?.getPlatform?.() === "ios";
 let purchasesReady;
 let paywallReady;
 
+
+// Visible in-game feedback avoids silent failures when native dialogs do not display.
+function showPremiumNotice(message) {
+  let notice = document.getElementById("premiumNotice");
+  if (!notice) {
+    notice = document.createElement("div");
+    notice.id = "premiumNotice";
+    notice.setAttribute("role", "alert");
+    notice.style.cssText = "position:fixed;z-index:99999;left:12px;right:12px;top:calc(env(safe-area-inset-top, 0px) + 12px);background:#173b52;color:white;border:2px solid #f8da58;border-radius:12px;padding:16px;font:600 16px/1.4 system-ui;box-shadow:0 8px 30px #0008";
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "CLOSE";
+    close.style.cssText = "display:block;margin-top:12px;padding:9px 16px;font-weight:bold";
+    close.addEventListener("click", () => notice.remove());
+    notice.appendChild(document.createElement("span"));
+    notice.appendChild(close);
+    document.body.appendChild(notice);
+  }
+  notice.querySelector("span").textContent = message;
+}
+
 function premiumErrorMessage(error) {
   console.error("Pickle Pop Premium error:", error);
-  alert("Premium is temporarily unavailable. Please try again later.");
+  showPremiumNotice("Premium could not open. Please check your connection and try again. If it keeps happening, report this message.");
 }
 
 async function getPurchases() {
@@ -670,13 +691,16 @@ if (!isPremium) {
   });
 async function openPremiumPaywall() {
     if (!isNativeApp) {
-      alert("Premium purchases are available in the installed iPhone app.");
+      showPremiumNotice("Premium purchases are available only in the installed iPhone app.");
       return;
     }
     try {
       // Wait for RevenueCat configuration before displaying its native UI.
+      showPremiumNotice("Opening Premium…");
       await getPurchases();
       const ui = await getPaywall();
+      if (!ui?.presentPaywall) throw new Error("RevenueCat paywall plugin unavailable");
+      document.getElementById("premiumNotice")?.remove();
       await ui.presentPaywall();
       await refreshPremiumStatus();
     } catch (error) {
@@ -687,7 +711,7 @@ async function openPremiumPaywall() {
   document.getElementById("premiumBtn")?.addEventListener("click", openPremiumPaywall);
   document.getElementById("restorePurchasesBtn")?.addEventListener("click", async () => {
     if (!isNativeApp) {
-      alert("Restore Purchases is available in the installed iPhone app.");
+      showPremiumNotice("Restore Purchases is available only in the installed iPhone app.");
       return;
     }
     try {
@@ -695,7 +719,7 @@ async function openPremiumPaywall() {
       const response = await purchases.restorePurchases();
       const isPremium = isPremiumCustomer(response?.customerInfo);
       localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
-      alert(isPremium ? "Premium restored successfully!" : "No active Premium purchase was found.");
+      showPremiumNotice(isPremium ? "Premium restored successfully!" : "No active Premium purchase was found.");
     } catch (error) {
       premiumErrorMessage(error);
     }
