@@ -27,7 +27,15 @@ function showPremiumNotice(message) {
 
 function premiumErrorMessage(error) {
   console.error("Pickle Pop Premium error:", error);
-  showPremiumNotice("Premium could not open. Please check your connection and try again. If it keeps happening, report this message.");
+  showPremiumNotice("Premium error: " + (error?.message || String(error)) + ". Please report this message.");
+}
+
+// Bound native calls so an unresolved plugin request cannot freeze Premium forever.
+function withPurchaseTimeout(promise, step, milliseconds = 12000) {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((_, reject) => setTimeout(() => reject(new Error(step + " timed out after 12 seconds")), milliseconds))
+  ]);
 }
 
 async function getPurchases() {
@@ -36,7 +44,7 @@ async function getPurchases() {
     purchasesReady = (async () => {
       if (!REVENUECAT_API_KEY) throw new Error("Missing VITE_REVENUECAT_API_KEY build setting");
       const { Purchases } = await import("@revenuecat/purchases-capacitor");
-      await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+      await withPurchaseTimeout(Purchases.configure({ apiKey: REVENUECAT_API_KEY }), "RevenueCat setup");
       return Purchases;
     })().catch(error => { purchasesReady = null; throw error; });
   }
@@ -58,7 +66,7 @@ function isPremiumCustomer(info) {
 
 async function refreshPremiumStatus() {
   const purchases = await getPurchases();
-  const response = await purchases.getCustomerInfo();
+  const response = await withPurchaseTimeout(purchases.getCustomerInfo(), "Premium status");
   const isPremium = isPremiumCustomer(response?.customerInfo);
   localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
   return isPremium;
@@ -697,11 +705,13 @@ async function openPremiumPaywall() {
     try {
       // Wait for RevenueCat configuration before displaying its native UI.
       showPremiumNotice("Opening Premium…");
-      await getPurchases();
+      const purchases = await getPurchases();
+      showPremiumNotice("Checking Premium offer…");
+      await withPurchaseTimeout(purchases.getOfferings(), "Premium offerings");
       const ui = await getPaywall();
       if (!ui?.presentPaywall) throw new Error("RevenueCat paywall plugin unavailable");
       document.getElementById("premiumNotice")?.remove();
-      await ui.presentPaywall();
+      await withPurchaseTimeout(ui.presentPaywall(), "Premium screen");
       await refreshPremiumStatus();
     } catch (error) {
       premiumErrorMessage(error);
@@ -715,8 +725,9 @@ async function openPremiumPaywall() {
       return;
     }
     try {
+      showPremiumNotice("Checking past purchases…");
       const purchases = await getPurchases();
-      const response = await purchases.restorePurchases();
+      const response = await withPurchaseTimeout(purchases.restorePurchases(), "Restore Purchases");
       const isPremium = isPremiumCustomer(response?.customerInfo);
       localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
       showPremiumNotice(isPremium ? "Premium restored successfully!" : "No active Premium purchase was found.");
