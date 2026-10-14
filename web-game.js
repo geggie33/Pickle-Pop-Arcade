@@ -631,5 +631,5 @@ if (isNativeApp && !isPremium) {
 function openPremiumPaywall() { showPremiumNotice("Web Premium subscriptions are coming soon. Play the browser preview free for now."); }
   document.getElementById("premiumBtn")?.addEventListener("click", openPremiumPaywall);
   document.getElementById("restorePurchasesBtn")?.addEventListener("click", () => showPremiumNotice("Web subscriptions are not available yet."));
-  updateChallengeUI(); updateUI(); draw(); requestAnimationFrame(frame);
+  updateChallengeUI(); updateUI(); draw(); window.__pickleStarted = true; requestAnimationFrame(frame);
 })();
