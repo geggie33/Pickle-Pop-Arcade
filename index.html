@@ -103,6 +103,33 @@
       <span id="rallyLabel">Rally: 0</span>
     </footer>
   </main>
-  <script defer src="web-game.js?v=browser-20261013"></script>
+  <script>
+  // Report loading and runtime errors on the page, not only in developer tools.
+  window.__pickleStarted = false;
+  function pickleStatus(message) {
+    let el = document.getElementById("pickleStatus");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "pickleStatus";
+      el.setAttribute("role", "alert");
+      el.style.cssText = "position:fixed;z-index:100000;bottom:12px;left:12px;right:12px;max-width:700px;margin:auto;background:#173b52;border:2px solid #d7ff45;color:white;padding:12px 16px;border-radius:12px;font:600 15px system-ui;overflow-wrap:anywhere";
+      document.body.appendChild(el);
+    }
+    el.textContent = message;
+  }
+  window.addEventListener("error", function(event) {
+    pickleStatus("Game error: " + (event.message || "Unable to load game script"));
+  });
+  window.addEventListener("unhandledrejection", function(event) {
+    pickleStatus("Game error: " + (event.reason?.message || String(event.reason)));
+  });
+  window.addEventListener("load", function() {
+    setTimeout(function() {
+      if (!window.__pickleStarted && !document.getElementById("pickleStatus"))
+        pickleStatus("Game did not start. The browser script may be missing or blocked.");
+    }, 1500);
+  });
+</script>
+<script defer src="web-game.js?v=browser-20261013-diagnostics" onerror="pickleStatus('Game script could not be loaded from GitHub Pages.')"></script>
 </body>
 </html>
