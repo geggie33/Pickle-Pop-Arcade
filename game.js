@@ -1,5 +1,5 @@
 const REVENUECAT_ENTITLEMENT = "pickle_pop_arcade_pro";
-const REVENUECAT_API_KEY = import.meta.env.VITE_REVENUECAT_API_KEY || "";
+const REVENUECAT_API_KEY = import.meta.env?.VITE_REVENUECAT_API_KEY || "";
 const isNativeApp = !!window.Capacitor?.isNativePlatform?.() || window.Capacitor?.getPlatform?.() === "ios";
 let purchasesReady;
 let paywallReady;
@@ -587,7 +587,7 @@ eti;
     const freeGamesPlayed = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
 const isPremium = localStorage.getItem("picklePopPremium") === "true";
 
-if (nextLevel !== "learn" && freeGamesPlayed >= 2 && !isPremium) {
+if (isNativeApp && nextLevel !== "learn" && freeGamesPlayed >= 2 && !isPremium) {
   openPremiumPaywall();
   return;
 }
@@ -641,7 +641,7 @@ if (nextLevel !== "learn" && freeGamesPlayed >= 2 && !isPremium) {
   let challengeWasRunning = false;
   function openChallenges() {
     const isPremium = localStorage.getItem("picklePopPremium") === "true";
-if (!isPremium) {
+if (isNativeApp && !isPremium) {
   openPremiumPaywall();
   return;
 }
@@ -659,7 +659,7 @@ if (!isPremium) {
 
   function equipReward(kind, value) {
     const isPremium = localStorage.getItem("picklePopPremium") === "true";
-if (!isPremium) {
+if (isNativeApp && !isPremium) {
   openPremiumPaywall();
   return;
 }
@@ -699,7 +699,7 @@ if (!isPremium) {
   });
 async function openPremiumPaywall() {
     if (!isNativeApp) {
-      showPremiumNotice("Premium purchases are available only in the installed iPhone app.");
+      showPremiumNotice("Web Premium payments are coming soon. Until then, enjoy the free browser preview!");
       return;
     }
     try {
@@ -721,7 +721,7 @@ async function openPremiumPaywall() {
   document.getElementById("premiumBtn")?.addEventListener("click", openPremiumPaywall);
   document.getElementById("restorePurchasesBtn")?.addEventListener("click", async () => {
     if (!isNativeApp) {
-      showPremiumNotice("Restore Purchases is available only in the installed iPhone app.");
+      showPremiumNotice("Web subscriptions are not available yet. You can play the browser preview for free.");
       return;
     }
     try {
