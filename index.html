@@ -140,15 +140,20 @@
     panel.style.cssText="position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px";
     const box=document.createElement("div");box.style.cssText="background:#173b52;color:white;padding:24px;border:2px solid #d7ff45;border-radius:14px;width:min(400px,100%);font:16px system-ui";
     const heading=document.createElement("h2");heading.textContent="Pickle Pop Premium";box.appendChild(heading);
-    const desc=document.createElement("p");desc.textContent="Enter your email to sign in or restore Premium.";box.appendChild(desc);
+    const desc=document.createElement("p");desc.textContent="Sign in to check Premium or subscribe for $2.99/month.";box.appendChild(desc);
     const email=document.createElement("input");email.type="email";email.placeholder="Email address";email.autocomplete="email";email.style.cssText="box-sizing:border-box;width:100%;font:18px system-ui;padding:12px;margin-bottom:12px;color:#111;background:white;border-radius:6px";box.appendChild(email);
     const message=document.createElement("p");message.style.cssText="font-size:14px;min-height:20px";box.appendChild(message);
     const submit=document.createElement("button");submit.textContent="Send sign-in link";submit.style.cssText="padding:12px;margin-right:12px;cursor:pointer";box.appendChild(submit);
+    const subscribe=document.createElement("button");subscribe.textContent="Subscribe — $2.99/month";subscribe.style.cssText="padding:12px;margin:8px 8px 8px 0;cursor:pointer";subscribe.hidden=true;box.appendChild(subscribe);
     const close=document.createElement("button");close.textContent="Close";close.style.cssText="padding:12px;cursor:pointer";close.onclick=()=>panel.remove();box.appendChild(close);
     submit.onclick=async()=>{if(!email.validity.valid||!email.value){message.textContent="Enter a valid email address.";return;}submit.disabled=true;message.textContent="Sending...";
       try{if(!window.pickleAuth)throw Error("Sign-in service unavailable. Please refresh and try again.");await window.pickleAuth.signIn(email.value.trim());message.textContent="Check your email for the sign-in link. Return here and tap Restore Purchases.";}
       catch(err){message.textContent=err.message||"Unable to send sign-in link.";}finally{submit.disabled=false;}
     };
+    subscribe.onclick=async()=>{subscribe.disabled=true;message.textContent="Opening secure Stripe checkout...";try{await window.pickleAuth.checkout();}catch(err){message.textContent=err.message;subscribe.disabled=false;}};
+    if(window.pickleAuth)window.pickleAuth.check().then(state=>{
+      if(state.signedIn){email.hidden=true;submit.hidden=true;desc.textContent=state.premium?"Your Premium subscription is active.":"Signed in as "+state.email+". Subscribe for unlimited games at $2.99/month.";subscribe.hidden=!!state.premium;}
+    }).catch(err=>{message.textContent="Subscription check: "+err.message;});
     panel.appendChild(box);document.body.appendChild(panel);email.focus();
   }
   document.addEventListener("click",function(e){if(e.target.closest("#premiumBtn"))openEmailDialog(e);},true);
@@ -170,10 +175,33 @@ window.pickleAuth = {
     const result=await response.json();
     return {premium:result.premium===true,signedIn:true,email:session.user.email};
   },
-  async signOut(){await client.auth.signOut();}
+  async signOut(){await client.auth.signOut();},
+  async checkout(){
+    const {data:{session}}=await client.auth.getSession();
+    if(!session)throw Error("Please sign in first.");
+    const response=await fetch("https://igihtodjxolxyxlnmvlz.supabase.co/functions/v1/pickle-pop-checkout",{method:"POST",headers:{"authorization":"Bearer "+session.access_token}});
+    const result=await response.json();
+    if(!response.ok||!result.url)throw Error(result.error||"Checkout unavailable");
+    window.location.assign(result.url);
+  },
+  async confirmCheckout(sessionId){
+    const {data:{session}}=await client.auth.getSession();
+    if(!session)throw Error("Please sign in to confirm your purchase.");
+    const response=await fetch("https://igihtodjxolxyxlnmvlz.supabase.co/functions/v1/pickle-pop-checkout?session_id="+encodeURIComponent(sessionId),{headers:{"authorization":"Bearer "+session.access_token}});
+    const result=await response.json();
+    if(!response.ok||!result.premium)throw Error(result.error||"Payment not yet confirmed");
+    return result;
+  }
 };
 window.dispatchEvent(new Event("pickle-auth-ready"));
+const checkoutId=new URLSearchParams(location.search).get("checkout_session_id");
+if(checkoutId){
+  window.pickleAuth.confirmCheckout(checkoutId).then(()=>{
+    history.replaceState(null,"",location.pathname);
+    window.dispatchEvent(new Event("pickle-premium-confirmed"));
+  }).catch(e=>{window.pickleCheckoutError=e.message;window.dispatchEvent(new Event("pickle-checkout-error"));});
+}
 </script>
-<script defer src="web-game.js?v=keyboard-fix-20261015" onerror="pickleStatus('Game script could not be loaded from GitHub Pages.')"></script>
+<script defer src="web-game.js?v=checkout-20261015" onerror="pickleStatus('Game script could not be loaded from GitHub Pages.')"></script>
 </body>
 </html>
