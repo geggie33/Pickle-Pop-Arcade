@@ -143,7 +143,7 @@
     const desc=document.createElement("p");desc.textContent="Sign in to check Premium or subscribe for $2.99/month.";box.appendChild(desc);
     const email=document.createElement("input");email.type="email";email.placeholder="Email address";email.autocomplete="email";email.style.cssText="box-sizing:border-box;width:100%;font:18px system-ui;padding:12px;margin-bottom:12px;color:#111;background:white;border-radius:6px";box.appendChild(email);
     const message=document.createElement("p");message.style.cssText="font-size:14px;min-height:20px";box.appendChild(message);
-    const submit=document.createElement("button");submit.textContent="Send sign-in link";submit.style.cssText="padding:12px;margin-right:12px;cursor:pointer";box.appendChild(submit);
+    const submit=document.createElement("button");submit.textContent="Checking sign-in...";submit.disabled=true;submit.style.cssText="padding:12px;margin-right:12px;cursor:pointer";box.appendChild(submit);
     const subscribe=document.createElement("button");subscribe.textContent="Subscribe — $2.99/month";subscribe.style.cssText="padding:12px;margin:8px 8px 8px 0;cursor:pointer";subscribe.hidden=true;box.appendChild(subscribe);
     const close=document.createElement("button");close.textContent="Close";close.style.cssText="padding:12px;cursor:pointer";close.onclick=()=>panel.remove();box.appendChild(close);
     submit.onclick=async()=>{if(!email.validity.valid||!email.value){message.textContent="Enter a valid email address.";return;}submit.disabled=true;message.textContent="Sending...";
@@ -151,10 +151,27 @@
       catch(err){message.textContent=err.message||"Unable to send sign-in link.";}finally{submit.disabled=false;}
     };
     subscribe.onclick=async()=>{subscribe.disabled=true;message.textContent="Opening secure Stripe checkout...";try{await window.pickleAuth.checkout();}catch(err){message.textContent=err.message;subscribe.disabled=false;}};
-    if(window.pickleAuth)window.pickleAuth.check().then(state=>{
-      if(state.signedIn){email.hidden=true;submit.hidden=true;desc.textContent=state.premium?"Your Premium subscription is active.":"Signed in as "+state.email+". Subscribe for unlimited games at $2.99/month.";subscribe.hidden=!!state.premium;}
-    }).catch(err=>{message.textContent="Subscription check: "+err.message;});
-    panel.appendChild(box);document.body.appendChild(panel);email.focus();
+    panel.appendChild(box);document.body.appendChild(panel);
+    const checkSession=async()=>{
+      try{
+        if(!window.pickleAuth)throw Error("Sign-in service did not load. Refresh the page.");
+        const state=await window.pickleAuth.check();
+        if(state.signedIn){
+          email.hidden=true;submit.hidden=true;
+          desc.textContent=state.premium?"Your Premium subscription is active.":"Signed in as "+state.email+". Subscribe for unlimited games at $2.99/month.";
+          subscribe.hidden=!!state.premium;
+          message.textContent="";
+        }else{
+          submit.textContent="Send sign-in link";submit.disabled=false;
+          message.textContent="Not signed in on this browser. Enter your email to receive a fresh sign-in link.";
+          email.focus();
+        }
+      }catch(err){
+        submit.textContent="Send sign-in link";submit.disabled=false;
+        message.textContent="Sign-in check: "+err.message;
+      }
+    };
+    checkSession();
   }
   document.addEventListener("click",function(e){if(e.target.closest("#premiumBtn"))openEmailDialog(e);},true);
 })();
