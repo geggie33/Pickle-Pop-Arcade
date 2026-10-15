@@ -169,7 +169,7 @@ function showPremiumNotice(message) {
   function recordCompletedMatch(playerWon) {
     if (level === "learn") return null;
     const freeGamesPlayed = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
-if (freeGamesPlayed < 2) {
+if (!verifiedPremium && freeGamesPlayed < 2) {
   localStorage.setItem("picklePopFreeGamesPlayed", String(freeGamesPlayed + 1));
 }
     recordDailyPlay();
@@ -657,7 +657,9 @@ if (isNativeApp && !isPremium) {
     ui.challengePanel.classList.add("hidden");
     ui.modeMenu.classList.remove("hidden");
   });
-function openPremiumPaywall() { showPremiumNotice("Your 2 free games are finished. Premium is required to keep playing. Click Premium to sign in or restore access."); }
+function openPremiumPaywall() {
+    showPremiumNotice("🏓 You're Just Getting Warmed Up! Your 2 free matches are finished. Ready for another shot at Pro? Get unlimited Pickle Pop matches for $2.99/month. Cancel anytime. Tap Premium to subscribe.");
+  }
   document.getElementById("premiumBtn")?.addEventListener("click", handlePremiumClick);
   document.getElementById("restorePurchasesBtn")?.addEventListener("click", async () => {
     try {
