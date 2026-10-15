@@ -524,8 +524,8 @@ eti;
   canvas.addEventListener("pointerdown", e => { player.targetX = pointerX(e); canvas.setPointerCapture(e.pointerId); });
   canvas.addEventListener("pointermove", e => { if (e.buttons || e.pointerType === "touch") player.targetX = pointerX(e); });
   window.addEventListener("keydown", e => {
-    if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") player.targetX -= 85;
-    if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") player.targetX += 85;
+    if (e.key === "ArrowLeft" || (typeof e.key === "string" ? e.key.toLowerCase() : "") === "a") player.targetX -= 85;
+    if (e.key === "ArrowRight" || (typeof e.key === "string" ? e.key.toLowerCase() : "") === "d") player.targetX += 85;
     if (e.code === "Space" && waitingForServe && server === "player") serveBall();
   });
 
