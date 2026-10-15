@@ -19,15 +19,13 @@ function showPremiumNotice(message) {
     return state;
   }
   async function handlePremiumClick() {
+    const email = window.prompt("Enter your email to sign in or restore Pickle Pop Premium:");
+    if (!email) return;
     try {
-      const state = await refreshPremium();
-      if (state.premium) { showPremiumNotice("Premium is active. Unlimited matches are unlocked!"); return; }
-      if (state.signedIn) { showPremiumNotice("Signed in as " + state.email + ". No active Pickle Pop subscription found yet. Purchases are not enabled until testing is complete."); return; }
-      const email = window.prompt("Enter your email to sign in or restore Premium:");
-      if (!email) return;
+      if (!window.pickleAuth) throw Error("Sign-in service is still loading. Refresh the page and try again.");
       await window.pickleAuth.signIn(email.trim());
-      showPremiumNotice("Check your email for a Pickle Pop sign-in link. Open the link to return to the game, then tap Restore Purchases.");
-    } catch(e) { showPremiumNotice("Premium check: " + e.message); }
+      showPremiumNotice("Check your email for a sign-in link. Open it to return to Pickle Pop, then click Restore Purchases.");
+    } catch(e) { showPremiumNotice("Sign-in error: " + e.message); }
   }
   window.addEventListener("pickle-auth-ready", () => { authReady = true; refreshPremium().catch(()=>{}); });
   if (window.pickleAuth) { authReady = true; refreshPremium().catch(()=>{}); }
@@ -655,8 +653,15 @@ if (isNativeApp && !isPremium) {
     ui.challengePanel.classList.add("hidden");
     ui.modeMenu.classList.remove("hidden");
   });
-function openPremiumPaywall() { showPremiumNotice("Your 2 free games are finished. Premium is required to keep playing. Web payments are coming soon."); }
-  document.getElementById("premiumBtn")?.addEventListener("click", openPremiumPaywall);
-  document.getElementById("restorePurchasesBtn")?.addEventListener("click", () => showPremiumNotice("Web subscriptions are not available yet."));
+function openPremiumPaywall() { showPremiumNotice("Your 2 free games are finished. Premium is required to keep playing. Click Premium to sign in or restore access."); }
+  document.getElementById("premiumBtn")?.addEventListener("click", handlePremiumClick);
+  document.getElementById("restorePurchasesBtn")?.addEventListener("click", async () => {
+    try {
+      const state = await refreshPremium();
+      if (state.premium) showPremiumNotice("Premium restored! Unlimited matches unlocked.");
+      else if (!state.signedIn) showPremiumNotice("No account signed in. Click Premium to enter your email.");
+      else showPremiumNotice("Signed in, but no active Pickle Pop subscription was found.");
+    } catch(e) { showPremiumNotice("Restore error: " + e.message); }
+  });
   updateChallengeUI(); updateUI(); draw(); window.__pickleStarted = true; requestAnimationFrame(frame);
 })();
