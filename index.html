@@ -130,6 +130,30 @@
     }, 1500);
   });
 </script>
+<script>
+(function(){
+  function openEmailDialog(e){
+    e.preventDefault(); e.stopImmediatePropagation();
+    let panel=document.getElementById("pickleEmailDialog");
+    if(panel){panel.remove();return;}
+    panel=document.createElement("div"); panel.id="pickleEmailDialog";
+    panel.style.cssText="position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px";
+    const box=document.createElement("div");box.style.cssText="background:#173b52;color:white;padding:24px;border:2px solid #d7ff45;border-radius:14px;width:min(400px,100%);font:16px system-ui";
+    const heading=document.createElement("h2");heading.textContent="Pickle Pop Premium";box.appendChild(heading);
+    const desc=document.createElement("p");desc.textContent="Enter your email to sign in or restore Premium.";box.appendChild(desc);
+    const email=document.createElement("input");email.type="email";email.placeholder="Email address";email.autocomplete="email";email.style.cssText="box-sizing:border-box;width:100%;font:18px system-ui;padding:12px;margin-bottom:12px;color:#111;background:white;border-radius:6px";box.appendChild(email);
+    const message=document.createElement("p");message.style.cssText="font-size:14px;min-height:20px";box.appendChild(message);
+    const submit=document.createElement("button");submit.textContent="Send sign-in link";submit.style.cssText="padding:12px;margin-right:12px;cursor:pointer";box.appendChild(submit);
+    const close=document.createElement("button");close.textContent="Close";close.style.cssText="padding:12px;cursor:pointer";close.onclick=()=>panel.remove();box.appendChild(close);
+    submit.onclick=async()=>{if(!email.validity.valid||!email.value){message.textContent="Enter a valid email address.";return;}submit.disabled=true;message.textContent="Sending...";
+      try{if(!window.pickleAuth)throw Error("Sign-in service unavailable. Please refresh and try again.");await window.pickleAuth.signIn(email.value.trim());message.textContent="Check your email for the sign-in link. Return here and tap Restore Purchases.";}
+      catch(err){message.textContent=err.message||"Unable to send sign-in link.";}finally{submit.disabled=false;}
+    };
+    panel.appendChild(box);document.body.appendChild(panel);email.focus();
+  }
+  document.addEventListener("click",function(e){if(e.target.closest("#premiumBtn"))openEmailDialog(e);},true);
+})();
+</script>
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const client = createClient("https://igihtodjxolxyxlnmvlz.supabase.co","sb_publishable_VD8BaLUAGPCvd5t_VvrfRg_NZSxZdzU",{auth:{detectSessionInUrl:true,persistSession:true}});
