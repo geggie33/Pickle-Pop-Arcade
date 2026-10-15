@@ -27,6 +27,10 @@ function showPremiumNotice(message) {
       showPremiumNotice("Check your email for a sign-in link. Open it to return to Pickle Pop, then click Restore Purchases.");
     } catch(e) { showPremiumNotice("Sign-in error: " + e.message); }
   }
+  window.addEventListener("pickle-premium-confirmed", () => {
+    refreshPremium().then(() => showPremiumNotice("Payment confirmed! Premium is active. Unlimited games unlocked.")).catch(e => showPremiumNotice("Payment confirmed, but access check failed: "+e.message));
+  });
+  window.addEventListener("pickle-checkout-error", () => showPremiumNotice("Payment verification: "+(window.pickleCheckoutError||"Please use Restore Purchases.")));
   window.addEventListener("pickle-auth-ready", () => { authReady = true; refreshPremium().catch(()=>{}); });
   if (window.pickleAuth) { authReady = true; refreshPremium().catch(()=>{}); }
   const canvas = document.querySelector("#court");
