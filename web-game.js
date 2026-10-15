@@ -510,6 +510,11 @@ eti;
   });
 
   function startMatch() {
+    if (level !== "learn" && Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0") >= 2) {
+      running = false;
+      openPremiumPaywall();
+      return;
+    }
     playerScore = aiScore = rally = tutorialStep = 0; server = "player";
     player.x = player.targetX = ai.x = ai.targetX = W / 2; resetBall();
   }
@@ -518,7 +523,7 @@ eti;
     const freeGamesPlayed = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
 const isPremium = localStorage.getItem("picklePopPremium") === "true";
 
-if (isNativeApp && nextLevel !== "learn" && freeGamesPlayed >= 2 && !isPremium) {
+if (nextLevel !== "learn" && freeGamesPlayed >= 2) {
   openPremiumPaywall();
   return;
 }
@@ -628,7 +633,7 @@ if (isNativeApp && !isPremium) {
     ui.challengePanel.classList.add("hidden");
     ui.modeMenu.classList.remove("hidden");
   });
-function openPremiumPaywall() { showPremiumNotice("Web Premium subscriptions are coming soon. Play the browser preview free for now."); }
+function openPremiumPaywall() { showPremiumNotice("Your 2 free games are finished. Premium is required to keep playing. Web payments are coming soon."); }
   document.getElementById("premiumBtn")?.addEventListener("click", openPremiumPaywall);
   document.getElementById("restorePurchasesBtn")?.addEventListener("click", () => showPremiumNotice("Web subscriptions are not available yet."));
   updateChallengeUI(); updateUI(); draw(); window.__pickleStarted = true; requestAnimationFrame(frame);
