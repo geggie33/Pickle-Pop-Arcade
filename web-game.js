@@ -9,6 +9,28 @@ function showPremiumNotice(message) {
 (() => {
   "use strict";
 
+  let verifiedPremium = false;
+  let authReady = false;
+  async function refreshPremium() {
+    if (!window.pickleAuth) throw Error("Sign-in service is still loading. Try again shortly.");
+    const state = await window.pickleAuth.check();
+    verifiedPremium = state.premium === true;
+    document.getElementById("premiumBtn").textContent = verifiedPremium ? "✓ Premium" : "Premium";
+    return state;
+  }
+  async function handlePremiumClick() {
+    try {
+      const state = await refreshPremium();
+      if (state.premium) { showPremiumNotice("Premium is active. Unlimited matches are unlocked!"); return; }
+      if (state.signedIn) { showPremiumNotice("Signed in as " + state.email + ". No active Pickle Pop subscription found yet. Purchases are not enabled until testing is complete."); return; }
+      const email = window.prompt("Enter your email to sign in or restore Premium:");
+      if (!email) return;
+      await window.pickleAuth.signIn(email.trim());
+      showPremiumNotice("Check your email for a Pickle Pop sign-in link. Open the link to return to the game, then tap Restore Purchases.");
+    } catch(e) { showPremiumNotice("Premium check: " + e.message); }
+  }
+  window.addEventListener("pickle-auth-ready", () => { authReady = true; refreshPremium().catch(()=>{}); });
+  if (window.pickleAuth) { authReady = true; refreshPremium().catch(()=>{}); }
   const canvas = document.querySelector("#court");
   const ctx = canvas.getContext("2d");
   const ui = {
@@ -510,7 +532,7 @@ eti;
   });
 
   function startMatch() {
-    if (level !== "learn" && Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0") >= 2) {
+    if (level !== "learn" && !verifiedPremium && Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0") >= 2) {
       running = false;
       openPremiumPaywall();
       return;
@@ -521,9 +543,9 @@ eti;
 
   function chooseLevel(nextLevel) {
     const freeGamesPlayed = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
-const isPremium = localStorage.getItem("picklePopPremium") === "true";
+const isPremium = verifiedPremium;
 
-if (nextLevel !== "learn" && freeGamesPlayed >= 2) {
+if (nextLevel !== "learn" && !verifiedPremium && freeGamesPlayed >= 2) {
   openPremiumPaywall();
   return;
 }
