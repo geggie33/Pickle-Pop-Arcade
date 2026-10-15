@@ -587,7 +587,7 @@ eti;
     const freeGamesPlayed = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
 const isPremium = localStorage.getItem("picklePopPremium") === "true";
 
-if (isNativeApp && nextLevel !== "learn" && freeGamesPlayed >= 2 && !isPremium) {
+if (nextLevel !== "learn" && freeGamesPlayed >= 2 && (!isNativeApp || !isPremium)) {
   openPremiumPaywall();
   return;
 }
@@ -699,7 +699,7 @@ if (isNativeApp && !isPremium) {
   });
 async function openPremiumPaywall() {
     if (!isNativeApp) {
-      showPremiumNotice("Web Premium payments are coming soon. Until then, enjoy the free browser preview!");
+      showPremiumNotice("Your 2 free games are finished. Premium is required to keep playing. Web payments are not available yet.");
       return;
     }
     try {
