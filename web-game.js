@@ -168,10 +168,7 @@ function showPremiumNotice(message) {
 
   function recordCompletedMatch(playerWon) {
     if (level === "learn") return null;
-    const freeGamesPlayed = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
-if (!verifiedPremium && freeGamesPlayed < 2) {
-  localStorage.setItem("picklePopFreeGamesPlayed", String(freeGamesPlayed + 1));
-}
+    // Free-match usage is counted when a match starts, not when it finishes.
     recordDailyPlay();
     if (!challengeState.levelsPlayed.includes(level)) challengeState.levelsPlayed.push(level);
     if (playerWon && !challengeState.levelsWon.includes(level)) challengeState.levelsWon.push(level);
@@ -538,6 +535,11 @@ eti;
       running = false;
       openPremiumPaywall();
       return;
+    }
+    // Count each started match so leaving early cannot reset the free allowance.
+    if (level !== "learn" && !verifiedPremium) {
+      const used = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
+      localStorage.setItem("picklePopFreeGamesPlayed", String(used + 1));
     }
     playerScore = aiScore = rally = tutorialStep = 0; server = "player";
     player.x = player.targetX = ai.x = ai.targetX = W / 2; resetBall();
