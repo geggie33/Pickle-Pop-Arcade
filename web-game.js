@@ -531,13 +531,13 @@ eti;
   });
 
   function startMatch() {
-    if (level !== "learn" && !verifiedPremium && Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0") >= 2) {
+    if (!verifiedPremium && Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0") >= 2) {
       running = false;
       openPremiumPaywall();
       return;
     }
     // Count each started match so leaving early cannot reset the free allowance.
-    if (level !== "learn" && !verifiedPremium) {
+    if (!verifiedPremium) {
       const used = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
       localStorage.setItem("picklePopFreeGamesPlayed", String(used + 1));
     }
@@ -549,7 +549,7 @@ eti;
     const freeGamesPlayed = Number(localStorage.getItem("picklePopFreeGamesPlayed") || "0");
 const isPremium = verifiedPremium;
 
-if (nextLevel !== "learn" && !verifiedPremium && freeGamesPlayed >= 2) {
+if (!verifiedPremium && freeGamesPlayed >= 2) {
   openPremiumPaywall();
   return;
 }
@@ -565,7 +565,7 @@ if (nextLevel !== "learn" && !verifiedPremium && freeGamesPlayed >= 2) {
     if (level === "learn") {
       showMessage(
         "How to Play",
-        "Drag anywhere on the court. The orange paddle follows your finger. Only the server can score.",
+        "Move your mouse pointer or drag your finger on the court to control the orange paddle. Only the server can score.",
         "READY",
         startMatch
       );
@@ -660,7 +660,7 @@ if (isNativeApp && !isPremium) {
     ui.modeMenu.classList.remove("hidden");
   });
 function openPremiumPaywall() {
-    showPremiumNotice("🏓 You're Just Getting Warmed Up! Your 2 free matches are finished. Ready for another shot at Pro? Get unlimited Pickle Pop matches for $2.99/month. Cancel anytime. Tap Premium to subscribe.");
+    showPremiumNotice("🏓 You're Just Getting Warmed Up! Your 2 free play sessions (including Practice) are finished. Ready for another shot at Pro? Get unlimited Pickle Pop matches for $2.99/month. Cancel anytime. Tap Premium to subscribe.");
   }
   document.getElementById("premiumBtn")?.addEventListener("click", handlePremiumClick);
   document.getElementById("restorePurchasesBtn")?.addEventListener("click", async () => {
