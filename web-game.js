@@ -667,7 +667,7 @@ function openPremiumPaywall() {
     try {
       const state = await refreshPremium();
       if (state.premium) showPremiumNotice("Premium restored! Unlimited matches unlocked.");
-      else if (!state.signedIn) showPremiumNotice("No account signed in. Click Premium to enter your email.");
+      else if (!state.signedIn) showPremiumNotice("No purchase found on this browser. For an older subscription, click Premium, then Restore an existing purchase.");
       else showPremiumNotice("Signed in, but no active Pickle Pop subscription was found.");
     } catch(e) { showPremiumNotice("Restore error: " + e.message); }
   });
