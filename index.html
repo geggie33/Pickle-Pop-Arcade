@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <script>if(!new URLSearchParams(location.search).has("play") && !sessionStorage.getItem("picklePendingPremium") && !location.hash.includes("access_token=") && !new URLSearchParams(location.search).has("code")) location.replace("./welcome-03.html");</script>
+  <script>if(!new URLSearchParams(location.search).has("play") && !localStorage.getItem("picklePendingPremium") && !location.hash.includes("access_token=") && !new URLSearchParams(location.search).has("code")) location.replace("./welcome-03.html");</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#102a43">
@@ -148,7 +148,7 @@
     const subscribe=document.createElement("button");subscribe.textContent="Subscribe — $2.99/month";subscribe.style.cssText="padding:12px;margin:8px 8px 8px 0;cursor:pointer";subscribe.hidden=true;box.appendChild(subscribe);
     const close=document.createElement("button");close.textContent="Close";close.style.cssText="padding:12px;cursor:pointer";close.onclick=()=>panel.remove();box.appendChild(close);
     submit.onclick=async()=>{if(!email.validity.valid||!email.value){message.textContent="Enter a valid email address.";return;}submit.disabled=true;message.textContent="Sending...";
-      try{if(!window.pickleAuth)throw Error("Sign-in service unavailable. Please refresh and try again.");sessionStorage.setItem("picklePendingPremium","1");await window.pickleAuth.signIn(email.value.trim());message.textContent="Check your email for the sign-in link. Return here and tap Restore Purchases.";}
+      try{if(!window.pickleAuth)throw Error("Sign-in service unavailable. Please refresh and try again.");localStorage.setItem("picklePendingPremium","1");await window.pickleAuth.signIn(email.value.trim());message.textContent="Check your email for the sign-in link. Return here and tap Restore Purchases.";}
       catch(err){message.textContent=err.message||"Unable to send sign-in link.";}finally{submit.disabled=false;}
     };
     subscribe.onclick=async()=>{subscribe.disabled=true;message.textContent="Opening secure Stripe checkout...";try{await window.pickleAuth.checkout();}catch(err){message.textContent=err.message;subscribe.disabled=false;}};
@@ -212,9 +212,9 @@ window.pickleAuth = {
   }
 };
 window.dispatchEvent(new Event("pickle-auth-ready"));
-if(sessionStorage.getItem("picklePendingPremium")){
+if(localStorage.getItem("picklePendingPremium")){
   client.auth.getSession().then(({data:{session}})=>{
-    if(session){sessionStorage.removeItem("picklePendingPremium");document.getElementById("premiumBtn")?.click();}
+    if(session){localStorage.removeItem("picklePendingPremium");document.getElementById("premiumBtn")?.click();}
   });
 }
 const checkoutId=new URLSearchParams(location.search).get("checkout_session_id");
