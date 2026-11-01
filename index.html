@@ -212,9 +212,21 @@ window.pickleAuth = {
   }
 };
 window.dispatchEvent(new Event("pickle-auth-ready"));
-if(localStorage.getItem("picklePendingPremium")){
-  client.auth.getSession().then(({data:{session}})=>{
-    if(session){localStorage.removeItem("picklePendingPremium");document.getElementById("premiumBtn")?.click();}
+// The verification email can open a different tab, so detect the auth callback
+// itself instead of relying only on browser storage from the original tab.
+const returningFromEmail = location.hash.includes("access_token=") ||
+  new URLSearchParams(location.search).has("code");
+if(returningFromEmail || localStorage.getItem("picklePendingPremium")){
+  client.auth.getSession().then(({data:{session},error})=>{
+    if(error || !session) return;
+    localStorage.removeItem("picklePendingPremium");
+    const showPremium = () => {
+      if(!document.getElementById("pickleEmailDialog"))
+        document.getElementById("premiumBtn")?.click();
+    };
+    if(document.readyState === "loading")
+      document.addEventListener("DOMContentLoaded",showPremium,{once:true});
+    else showPremium();
   });
 }
 const checkoutId=new URLSearchParams(location.search).get("checkout_session_id");
