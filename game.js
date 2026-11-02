@@ -707,11 +707,15 @@ async function openPremiumPaywall() {
       showPremiumNotice("Opening Premium…");
       const purchases = await getPurchases();
       showPremiumNotice("Checking Premium offer…");
-      await withPurchaseTimeout(purchases.getOfferings(), "Premium offerings");
-      const ui = await getPaywall();
-      if (!ui?.presentPaywall) throw new Error("RevenueCat paywall plugin unavailable");
+      const offeringsResponse = await withPurchaseTimeout(purchases.getOfferings(), "Premium offerings");
+      const offering = offeringsResponse?.offerings?.current;
+      if (!offering || !Array.isArray(offering.availablePackages) || offering.availablePackages.length === 0) {
+        throw new Error("No Apple subscription package is available. Check the RevenueCat Default offering and App Store product setup");
+      }
+      const paywallUI = await withPurchaseTimeout(getPaywall(), "Premium paywall module");
+      if (typeof paywallUI?.presentPaywall !== "function") throw new Error("RevenueCat paywall plugin unavailable");
       document.getElementById("premiumNotice")?.remove();
-      await withPurchaseTimeout(ui.presentPaywall(), "Premium screen");
+      await withPurchaseTimeout(paywallUI.presentPaywall({ offering }), "Premium screen");
       await refreshPremiumStatus();
     } catch (error) {
       premiumErrorMessage(error);
