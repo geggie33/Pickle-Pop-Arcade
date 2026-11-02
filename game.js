@@ -32,10 +32,11 @@ function premiumErrorMessage(error) {
 
 // Bound native calls so an unresolved plugin request cannot freeze Premium forever.
 function withPurchaseTimeout(promise, step, milliseconds = 12000) {
+  let timer;
   return Promise.race([
     Promise.resolve(promise),
-    new Promise((_, reject) => setTimeout(() => reject(new Error(step + " timed out after 12 seconds")), milliseconds))
-  ]);
+    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(step + " timed out after " + Math.round(milliseconds / 1000) + " seconds")), milliseconds); })
+  ]).finally(() => clearTimeout(timer));
 }
 
 async function getPurchases() {
@@ -43,7 +44,9 @@ async function getPurchases() {
   if (!purchasesReady) {
     purchasesReady = (async () => {
       if (!REVENUECAT_API_KEY) throw new Error("Missing VITE_REVENUECAT_API_KEY build setting");
-      const { Purchases } = await import("@revenuecat/purchases-capacitor");
+      const module = await withPurchaseTimeout(import("@revenuecat/purchases-capacitor"), "RevenueCat module loading");
+      const Purchases = module.Purchases;
+      if (!Purchases?.configure) throw new Error("RevenueCat native purchases module unavailable");
       await withPurchaseTimeout(Purchases.configure({ apiKey: REVENUECAT_API_KEY }), "RevenueCat setup");
       return Purchases;
     })().catch(error => { purchasesReady = null; throw error; });
