@@ -28,6 +28,15 @@ workflows:
             echo "ERROR: VITE_REVENUECAT_API_KEY is missing; refusing to build a broken iOS Premium flow."
             exit 1
           fi
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("index.html")
+          html = path.read_text()
+          old = '<script defer src="web-game.js?v=nationwide-launch-20261015" onerror="pickleStatus(\'Game script could not be loaded from GitHub Pages.\')"></script>'
+          assert old in html, "Expected web game script tag missing; stop build"
+          html = html.replace(old, '<script type="module" src="./game.js"></script>')
+          path.write_text(html)
+          PY
           npm run build
 
       
@@ -43,7 +52,7 @@ workflows:
       - name: Set iOS build number
         script: |
           cd ios/App
-          agvtool new-version -all 13
+          agvtool new-version -all 14
           
 
       - name: Set up code signing
