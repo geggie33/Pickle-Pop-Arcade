@@ -28,15 +28,10 @@ workflows:
             echo "ERROR: VITE_REVENUECAT_API_KEY is missing; refusing to build a broken iOS Premium flow."
             exit 1
           fi
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path("index.html")
-          html = path.read_text()
-          old = '<script defer src="web-game.js?v=nationwide-launch-20261015" onerror="pickleStatus(\'Game script could not be loaded from GitHub Pages.\')"></script>'
-          assert old in html, "Expected web game script tag missing; stop build"
-          html = html.replace(old, '<script type="module" src="./game.js"></script>')
-          path.write_text(html)
-          PY
+          # Restore the verified Build 11 native HTML entry point only for this iOS build.
+          # The public website remains unchanged.
+          git show 15b2e4e:index.html > index.html
+          grep -q 'type="module" src="game.js"' index.html || { echo "Native game entry missing"; exit 1; }
           npm run build
 
       
