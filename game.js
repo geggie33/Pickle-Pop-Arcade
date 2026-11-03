@@ -52,9 +52,9 @@ async function getPurchases() {
       if (typeof bridge?.isPluginAvailable === "function" && !bridge.isPluginAvailable("Purchases")) {
         throw new Error("Capacitor native Purchases plugin is not registered");
       }
-      if (typeof Purchases.then === "function") {
-        throw new Error("RevenueCat Purchases proxy is unexpectedly thenable");
-      }
+      // Capacitor dynamically exposes native method names through a proxy.
+      // Reading an unknown property such as "then" can return a callable stub;
+      // this is not evidence of a broken bridge.
       showPremiumNotice("Checking native Purchases bridge…");
       const nativePurchases = bridge?.Plugins?.Purchases;
       const directPurchases = typeof nativePurchases?.isConfigured === "function" ? nativePurchases : Purchases;
