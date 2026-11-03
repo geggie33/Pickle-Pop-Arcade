@@ -48,9 +48,23 @@ async function getPurchases() {
     purchasesReady = withPurchaseTimeout((async () => {
       if (!REVENUECAT_API_KEY) throw new Error("Missing VITE_REVENUECAT_API_KEY build setting");
       if (!Purchases?.configure) throw new Error("RevenueCat native purchases module unavailable");
-      await withPurchaseTimeout(Purchases.configure({ apiKey: REVENUECAT_API_KEY }), "RevenueCat setup");
+      const bridge = window.Capacitor;
+      if (typeof bridge?.isPluginAvailable === "function" && !bridge.isPluginAvailable("Purchases")) {
+        throw new Error("Capacitor native Purchases plugin is not registered");
+      }
+      if (typeof Purchases.then === "function") {
+        throw new Error("RevenueCat Purchases proxy is unexpectedly thenable");
+      }
+      showPremiumNotice("Checking native Purchases bridge…");
+      const nativePurchases = bridge?.Plugins?.Purchases;
+      const directPurchases = typeof nativePurchases?.isConfigured === "function" ? nativePurchases : Purchases;
+      const probe = await withPurchaseTimeout(directPurchases.isConfigured(), "Native Purchases bridge check", 6000);
+      showPremiumNotice("Native bridge responded (configured: " + String(probe?.isConfigured) + "). Setting up RevenueCat…");
+      if (!probe?.isConfigured) {
+        await withPurchaseTimeout(directPurchases.configure({ apiKey: REVENUECAT_API_KEY }), "RevenueCat native configure", 10000);
+      }
       return Purchases;
-    })(), "RevenueCat initialization", 15000).catch(error => { purchasesReady = null; throw error; });
+    })(), "RevenueCat initialization", 20000).catch(error => { purchasesReady = null; throw error; });
   }
   return purchasesReady;
 }
@@ -706,7 +720,7 @@ async function openPremiumPaywall() {
       // Wait for RevenueCat configuration before displaying its native UI.
       showPremiumNotice("Opening Premium…");
       showPremiumNotice("Initializing Apple purchases…");
-      const purchases = await withPurchaseTimeout(getPurchases(), "Opening Apple purchases", 18000);
+      const purchases = await withPurchaseTimeout(getPurchases(), "Opening Apple purchases", 22000);
       showPremiumNotice("Checking Premium offer…");
       const offeringsResponse = await withPurchaseTimeout(purchases.getOfferings(), "Premium offerings");
       const offering = offeringsResponse?.offerings?.current;
