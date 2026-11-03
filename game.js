@@ -1,3 +1,6 @@
+import { Purchases } from "@revenuecat/purchases-capacitor";
+import { RevenueCatUI } from "@revenuecat/purchases-capacitor-ui";
+
 const REVENUECAT_ENTITLEMENT = "pickle_pop_arcade_pro";
 const REVENUECAT_API_KEY = import.meta.env?.VITE_REVENUECAT_API_KEY || "";
 const isNativeApp = !!window.Capacitor?.isNativePlatform?.() || window.Capacitor?.getPlatform?.() === "ios";
@@ -42,25 +45,19 @@ function withPurchaseTimeout(promise, step, milliseconds = 12000) {
 async function getPurchases() {
   if (!isNativeApp) throw new Error("Purchases require the installed iOS app.");
   if (!purchasesReady) {
-    purchasesReady = (async () => {
+    purchasesReady = withPurchaseTimeout((async () => {
       if (!REVENUECAT_API_KEY) throw new Error("Missing VITE_REVENUECAT_API_KEY build setting");
-      const module = await withPurchaseTimeout(import("@revenuecat/purchases-capacitor"), "RevenueCat module loading");
-      const Purchases = module.Purchases;
       if (!Purchases?.configure) throw new Error("RevenueCat native purchases module unavailable");
       await withPurchaseTimeout(Purchases.configure({ apiKey: REVENUECAT_API_KEY }), "RevenueCat setup");
       return Purchases;
-    })().catch(error => { purchasesReady = null; throw error; });
+    })(), "RevenueCat initialization", 15000).catch(error => { purchasesReady = null; throw error; });
   }
   return purchasesReady;
 }
 
 async function getPaywall() {
-  if (!paywallReady) {
-    paywallReady = import("@revenuecat/purchases-capacitor-ui")
-      .then(module => module.RevenueCatUI)
-      .catch(error => { paywallReady = null; throw error; });
-  }
-  return paywallReady;
+  if (typeof RevenueCatUI?.presentPaywall !== "function") throw new Error("RevenueCat paywall plugin unavailable");
+  return RevenueCatUI;
 }
 
 function isPremiumCustomer(info) {
@@ -76,7 +73,7 @@ async function refreshPremiumStatus() {
 }
 
 // Initialize without allowing an unavailable purchase service to crash gameplay.
-if (isNativeApp) refreshPremiumStatus().catch(error => console.error("Premium initialization:", error));
+// Initialize purchases on demand after the app is ready, not during initial page loading.
 
 (() => {
   "use strict";
@@ -708,7 +705,8 @@ async function openPremiumPaywall() {
     try {
       // Wait for RevenueCat configuration before displaying its native UI.
       showPremiumNotice("Opening Premium…");
-      const purchases = await getPurchases();
+      showPremiumNotice("Initializing Apple purchases…");
+      const purchases = await withPurchaseTimeout(getPurchases(), "Opening Apple purchases", 18000);
       showPremiumNotice("Checking Premium offer…");
       const offeringsResponse = await withPurchaseTimeout(purchases.getOfferings(), "Premium offerings");
       const offering = offeringsResponse?.offerings?.current;
@@ -733,7 +731,9 @@ async function openPremiumPaywall() {
     }
     try {
       showPremiumNotice("Checking past purchases…");
-      const purchases = await getPurchases();
+      showPremiumNotice("Initializing Apple purchases…");
+      const purchases = await withPurchaseTimeout(getPurchases(), "Opening Apple purchases", 18000);
+      showPremiumNotice("Checking past purchases…");
       const response = await withPurchaseTimeout(purchases.restorePurchases(), "Restore Purchases");
       const isPremium = isPremiumCustomer(response?.customerInfo);
       localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
