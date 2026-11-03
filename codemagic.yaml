@@ -28,9 +28,9 @@ workflows:
             echo "ERROR: VITE_REVENUECAT_API_KEY is missing; refusing to build a broken iOS Premium flow."
             exit 1
           fi
-          # Restore the verified Build 11 native HTML entry point only for this iOS build.
+          # Use the checked-in native HTML entry point only for iOS builds.
           # The public website remains unchanged.
-          git show 15b2e4e:index.html > index.html
+          cp native-index.html index.html
           grep -q 'type="module" src="game.js"' index.html || { echo "Native game entry missing"; exit 1; }
           npm run build
 
