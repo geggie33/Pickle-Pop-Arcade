@@ -63,7 +63,7 @@ async function getPurchases() {
       if (!probe?.isConfigured) {
         await withPurchaseTimeout(directPurchases.configure({ apiKey: REVENUECAT_API_KEY }), "RevenueCat native configure", 10000);
       }
-      return Purchases;
+      return { purchases: Purchases };
     })(), "RevenueCat initialization", 20000).catch(error => { purchasesReady = null; throw error; });
   }
   return purchasesReady;
@@ -79,7 +79,7 @@ function isPremiumCustomer(info) {
 }
 
 async function refreshPremiumStatus() {
-  const purchases = await getPurchases();
+  const { purchases } = await getPurchases();
   const response = await withPurchaseTimeout(purchases.getCustomerInfo(), "Premium status");
   const isPremium = isPremiumCustomer(response?.customerInfo);
   localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
@@ -720,7 +720,7 @@ async function openPremiumPaywall() {
       // Wait for RevenueCat configuration before displaying its native UI.
       showPremiumNotice("Opening Premium…");
       showPremiumNotice("Initializing Apple purchases…");
-      const purchases = await withPurchaseTimeout(getPurchases(), "Opening Apple purchases", 22000);
+      const { purchases } = await withPurchaseTimeout(getPurchases(), "Opening Apple purchases", 22000);
       showPremiumNotice("Checking Premium offer…");
       const offeringsResponse = await withPurchaseTimeout(purchases.getOfferings(), "Premium offerings");
       const offering = offeringsResponse?.offerings?.current;
