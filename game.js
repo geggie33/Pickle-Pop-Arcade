@@ -746,7 +746,7 @@ async function openPremiumPaywall() {
     try {
       showPremiumNotice("Checking past purchases…");
       showPremiumNotice("Initializing Apple purchases…");
-      const purchases = await withPurchaseTimeout(getPurchases(), "Opening Apple purchases", 18000);
+      const { purchases } = await withPurchaseTimeout(getPurchases(), "Opening Apple purchases", 22000);
       showPremiumNotice("Checking past purchases…");
       const response = await withPurchaseTimeout(purchases.restorePurchases(), "Restore Purchases");
       const isPremium = isPremiumCustomer(response?.customerInfo);
