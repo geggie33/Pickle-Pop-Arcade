@@ -69,11 +69,6 @@ async function getPurchases() {
   return purchasesReady;
 }
 
-async function getPaywall() {
-  if (typeof RevenueCatUI?.presentPaywall !== "function") throw new Error("RevenueCat paywall plugin unavailable");
-  return RevenueCatUI;
-}
-
 function isPremiumCustomer(info) {
   return !!info?.entitlements?.active?.[REVENUECAT_ENTITLEMENT];
 }
@@ -723,14 +718,17 @@ async function openPremiumPaywall() {
       const { purchases } = await withPurchaseTimeout(getPurchases(), "Opening Apple purchases", 22000);
       showPremiumNotice("Checking Premium offer…");
       const offeringsResponse = await withPurchaseTimeout(purchases.getOfferings(), "Premium offerings");
-      const offering = offeringsResponse?.offerings?.current;
+      const offering = (offeringsResponse?.offerings ?? offeringsResponse)?.current;
       if (!offering || !Array.isArray(offering.availablePackages) || offering.availablePackages.length === 0) {
         throw new Error("No Apple subscription package is available. Check the RevenueCat Default offering and App Store product setup");
       }
-      const paywallUI = await withPurchaseTimeout(getPaywall(), "Premium paywall module");
-      if (typeof paywallUI?.presentPaywall !== "function") throw new Error("RevenueCat paywall plugin unavailable");
+      if (window.Capacitor?.isPluginAvailable && !window.Capacitor.isPluginAvailable("RevenueCatUI")) {
+        throw new Error("Native RevenueCatUI paywall plugin is not registered");
+      }
       document.getElementById("premiumNotice")?.remove();
-      await withPurchaseTimeout(paywallUI.presentPaywall({ offering }), "Premium screen");
+      // The native promise settles when the customer finishes or dismisses the paywall.
+      // Do not time out while the customer is deciding whether to subscribe.
+      await RevenueCatUI.presentPaywall({ offering });
       await refreshPremiumStatus();
     } catch (error) {
       premiumErrorMessage(error);
