@@ -42,7 +42,7 @@ function withPurchaseTimeout(promise, step, milliseconds = 12000) {
   ]).finally(() => clearTimeout(timer));
 }
 
-async function getPurchases() {
+async function getPurchases({ silent = false } = {}) {
   if (!isNativeApp) throw new Error("Purchases require the installed iOS app.");
   if (!purchasesReady) {
     purchasesReady = withPurchaseTimeout((async () => {
@@ -55,11 +55,11 @@ async function getPurchases() {
       // Capacitor dynamically exposes native method names through a proxy.
       // Reading an unknown property such as "then" can return a callable stub;
       // this is not evidence of a broken bridge.
-      showPremiumNotice("Checking native Purchases bridge…");
+      if (!silent) showPremiumNotice("Checking native Purchases bridge…");
       const nativePurchases = bridge?.Plugins?.Purchases;
       const directPurchases = typeof nativePurchases?.isConfigured === "function" ? nativePurchases : Purchases;
       const probe = await withPurchaseTimeout(directPurchases.isConfigured(), "Native Purchases bridge check", 6000);
-      showPremiumNotice("Native bridge responded (configured: " + String(probe?.isConfigured) + "). Setting up RevenueCat…");
+      if (!silent) showPremiumNotice("Native bridge responded (configured: " + String(probe?.isConfigured) + "). Setting up RevenueCat…");
       if (!probe?.isConfigured) {
         await withPurchaseTimeout(directPurchases.configure({ apiKey: REVENUECAT_API_KEY }), "RevenueCat native configure", 10000);
       }
@@ -73,11 +73,20 @@ function isPremiumCustomer(info) {
   return !!info?.entitlements?.active?.[REVENUECAT_ENTITLEMENT];
 }
 
+function setPremiumStatus(isPremium) {
+  localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
+  const button = document.getElementById("premiumBtn");
+  if (button) {
+    button.textContent = isPremium ? "Premium ✓" : "Premium";
+    button.setAttribute("aria-label", isPremium ? "Premium active" : "Premium subscription");
+  }
+}
+
 async function refreshPremiumStatus() {
-  const { purchases } = await getPurchases();
+  const { purchases } = await getPurchases({ silent: true });
   const response = await withPurchaseTimeout(purchases.getCustomerInfo(), "Premium status");
   const isPremium = isPremiumCustomer(response?.customerInfo);
-  localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
+  setPremiumStatus(isPremium);
   return isPremium;
 }
 
@@ -712,6 +721,10 @@ async function openPremiumPaywall() {
       return;
     }
     try {
+      if (await refreshPremiumStatus()) {
+        showPremiumNotice("Premium is active. Challenges and all games are unlocked!");
+        return;
+      }
       // Wait for RevenueCat configuration before displaying its native UI.
       showPremiumNotice("Opening Premium…");
       showPremiumNotice("Initializing Apple purchases…");
@@ -748,12 +761,19 @@ async function openPremiumPaywall() {
       showPremiumNotice("Checking past purchases…");
       const response = await withPurchaseTimeout(purchases.restorePurchases(), "Restore Purchases");
       const isPremium = isPremiumCustomer(response?.customerInfo);
-      localStorage.setItem("picklePopPremium", isPremium ? "true" : "false");
+      setPremiumStatus(isPremium);
       showPremiumNotice(isPremium ? "Premium restored successfully!" : "No active Premium purchase was found.");
     } catch (error) {
       premiumErrorMessage(error);
     }
   });
   
+  setPremiumStatus(localStorage.getItem("picklePopPremium") === "true");
+  if (isNativeApp) {
+    refreshPremiumStatus().catch(error => console.warn("Premium startup refresh failed:", error));
+    document.addEventListener("resume", () => {
+      refreshPremiumStatus().catch(error => console.warn("Premium resume refresh failed:", error));
+    });
+  }
   updateChallengeUI(); updateUI(); draw(); requestAnimationFrame(frame);
 })();
