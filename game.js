@@ -2,7 +2,7 @@ import { Purchases } from "@revenuecat/purchases-capacitor";
 import { RevenueCatUI } from "@revenuecat/purchases-capacitor-ui";
 
 const REVENUECAT_ENTITLEMENT = "pickle_pop_arcade_pro";
-const REVENUECAT_API_KEY = import.meta.env?.VITE_REVENUECAT_API_KEY || "";
+const REVENUECAT_API_KEY = (window.Capacitor?.getPlatform?.() === "android" ? import.meta.env?.VITE_REVENUECAT_ANDROID_API_KEY : import.meta.env?.VITE_REVENUECAT_API_KEY) || "";
 const isNativeApp = !!window.Capacitor?.isNativePlatform?.() || window.Capacitor?.getPlatform?.() === "ios";
 let purchasesReady;
 let paywallReady;
@@ -43,7 +43,7 @@ function withPurchaseTimeout(promise, step, milliseconds = 12000) {
 }
 
 async function getPurchases({ silent = false } = {}) {
-  if (!isNativeApp) throw new Error("Purchases require the installed iOS app.");
+  if (!isNativeApp) throw new Error("Purchases require the installed mobile app.");
   if (!purchasesReady) {
     purchasesReady = withPurchaseTimeout((async () => {
       if (!REVENUECAT_API_KEY) throw new Error("Missing VITE_REVENUECAT_API_KEY build setting");
