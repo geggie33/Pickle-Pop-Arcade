@@ -183,7 +183,7 @@ const publicCheckout="https://igihtodjxolxyxlnmvlz.supabase.co/functions/v1/pick
 const client = createClient("https://igihtodjxolxyxlnmvlz.supabase.co","sb_publishable_VD8BaLUAGPCvd5t_VvrfRg_NZSxZdzU",{auth:{detectSessionInUrl:true,persistSession:true}});
 window.pickleAuth = {
   async signIn(email) {
-    const {error} = await client.auth.signInWithOtp({email,options:{emailRedirectTo:"https://geggie33.github.io/Pickle-Pop-Arcade/"}});
+    const {error} = await client.auth.signInWithOtp({email,options:{emailRedirectTo:"https://picklepoparcade.net/"}});
     if(error) throw error;
   },
   async check() {
