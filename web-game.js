@@ -671,5 +671,10 @@ function openPremiumPaywall() {
       else showPremiumNotice("Signed in, but no active Pickle Pop subscription was found.");
     } catch(e) { showPremiumNotice("Restore error: " + e.message); }
   });
+  // Visitors arriving from the landing page start Beginner immediately.
+  // The normal menu remains available, and chooseLevel enforces the Premium gate.
+  if (new URLSearchParams(window.location.search).get("autoplay") === "beginner") {
+    chooseLevel("beginner");
+  }
   updateChallengeUI(); updateUI(); draw(); window.__pickleStarted = true; requestAnimationFrame(frame);
 })();
