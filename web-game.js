@@ -84,7 +84,7 @@ function showPremiumNotice(message) {
   };
   const difficulty = {
     learn: { aiSpeed: 4.1, returnSpeed: 7.2, error: 72, reaction: 0.075 },
-    beginner: { aiSpeed: 5.0, returnSpeed: 8.2, error: 48, reaction: 0.10 },
+    beginner: { aiSpeed: 3.3, returnSpeed: 6.0, error: 68, reaction: 0.07 },
     club: { aiSpeed: 6.6, returnSpeed: 10.3, error: 28, reaction: 0.15 },
     pro: { aiSpeed: 8.1, returnSpeed: 11.4, error: 14, reaction: 0.21 },
     champion: { aiSpeed: 8.5, returnSpeed: 11.2, error: 7, reaction: 0.24 }
@@ -108,7 +108,7 @@ function showPremiumNotice(message) {
   const speedNames = ["Slow", "Normal", "Fast"];
   const levelShotSpeeds = {
     learn: [7.4, 8.6, 9.8],
-    beginner: [8.6, 10.2, 12.0],
+    beginner: [6.8, 7.8, 9.0],
     club: [9.8, 11.8, 13.8],
     pro: [11.0, 13.0, 15.2],
     champion: [10.6, 12.6, 14.8]
@@ -356,7 +356,7 @@ function showPremiumNotice(message) {
     const playerAngle = Math.sign(offset) * angleStrength;
     // Keep Beginner fair: the rival should not paint unreachable sidelines.
     // Club can use wider angles; Pro keeps the full dangerous court.
-    const aiAngleLimit = level === "beginner" ? 1.65 : level === "club" ? 2.65 : 3.7;
+    const aiAngleLimit = level === "beginner" ? 0.9 : level === "club" ? 2.65 : 3.7;
     const aiAngle = Math.max(-aiAngleLimit, Math.min(aiAngleLimit, offset * 3.2 + (Math.random() - .5) * difficulty[level].error / 18));
     if (receivingServe && level === "learn") {
       // Keep the first return in play during instruction. Directional
@@ -381,7 +381,7 @@ function showPremiumNotice(message) {
       ball.x = owner.x; ball.y = owner.y + (server === "player" ? -34 : 34);
       return;
     }
-    player.x += (player.targetX - player.x) * Math.min(1, .16 * scale);
+    player.x += (player.targetX - player.x) * Math.min(1, (level === "beginner" ? .32 : .16) * scale);
     player.x = Math.max(court.left + player.w / 2, Math.min(court.right - player.w / 2, player.x));
 
     const d = difficulty[level];
@@ -406,7 +406,7 @@ function showPremiumNotice(message) {
       return;
     }
 
-    if (ball.vy > 0 && ball.y + ball.r >= player.y - player.h / 2 && ball.y < player.y + player.h && Math.abs(ball.x - player.x) < player.w / 2 + ball.r) {
+    if (ball.vy > 0 && ball.y + ball.r >= player.y - player.h / 2 && ball.y < player.y + player.h && Math.abs(ball.x - player.x) < player.w / 2 + ball.r + (level === "beginner" ? 24 : 0)) {
       paddleHit(player, true);
     }
     if (ball.vy < 0 && ball.y - ball.r <= ai.y + ai.h / 2 && ball.y > ai.y - ai.h && Math.abs(ball.x - ai.x) < ai.w / 2 + ball.r) {
@@ -488,7 +488,15 @@ eti;
     }
     */
     ctx.fillStyle = challengeState.equippedPaddle === "gold" && challengeState.goldPaddle ? "#ffd54a" : "#ff8c42"; ctx.shadowColor = "rgba(0,0,0,.35)"; ctx.shadowBlur = 12;
-    roundedRect(player.x - player.w / 2, player.y - player.h / 2, player.w, player.h, 12);
+    roundedRect(player.x - (level === "beginner" ? 190 : player.w) / 2, player.y - player.h / 2, level === "beginner" ? 190 : player.w, player.h, 12);
+    // Large visible grip: a clear place to put a thumb or finger and drag left/right.
+    if (level === "beginner") {
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#ff8c42"; roundedRect(player.x - 13, player.y + 7, 26, 36, 10);
+      ctx.fillStyle = "#e5ff38"; ctx.beginPath(); ctx.arc(player.x, player.y + 52, 29, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#15374a"; ctx.lineWidth = 4; ctx.stroke();
+      ctx.fillStyle = "#15374a"; ctx.font = "bold 12px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("DRAG", player.x, player.y + 52);
+    }
     ctx.fillStyle = "#c5e7ff"; roundedRect(ai.x - ai.w / 2, ai.y - ai.h / 2, ai.w, ai.h, 12);
     ctx.shadowBlur = 0;
 
