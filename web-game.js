@@ -1,10 +1,17 @@
 // Browser-only game: intentionally contains no Apple or RevenueCat dependencies.
 const isNativeApp = false;
-function showPremiumNotice(message) {
+function showPremiumNotice(message, offerCheckout = false) {
   let n = document.getElementById("premiumNotice");
   if (!n) { n=document.createElement("div");n.id="premiumNotice";n.style.cssText="position:fixed;z-index:99999;top:12px;left:12px;right:12px;padding:18px;background:#173b52;color:white;border:2px solid #d7ff45;border-radius:12px;font:600 16px system-ui";document.body.appendChild(n); }
   n.textContent=message+" ";
-  const b=document.createElement("button");b.textContent="Close";b.style.cssText="padding:8px;margin-left:10px";b.onclick=()=>n.remove();n.appendChild(b);
+  if (offerCheckout) {
+    const action=document.createElement("button");
+    action.type="button";action.textContent="🏓 UNLOCK UNLIMITED PLAY — $2.99/month";
+    action.style.cssText="display:block;width:100%;max-width:430px;margin:14px auto 8px;padding:15px 12px;background:#d7ff45;color:#173b52;border:0;border-radius:10px;font:800 16px system-ui;cursor:pointer";
+    action.onclick=()=>{n.remove();document.getElementById("premiumBtn")?.click();};
+    n.appendChild(action);
+  }
+  const b=document.createElement("button");b.textContent="Not now";b.style.cssText="padding:8px;margin-left:10px";b.onclick=()=>n.remove();n.appendChild(b);
 }
 (() => {
   "use strict";
@@ -668,7 +675,7 @@ if (isNativeApp && !isPremium) {
     ui.modeMenu.classList.remove("hidden");
   });
 function openPremiumPaywall() {
-    showPremiumNotice("🏓 You're Just Getting Warmed Up! Your 2 free play sessions (including Practice) are finished. Ready for another shot at Pro? Get unlimited Pickle Pop matches for $2.99/month. Cancel anytime. Tap Premium to subscribe.");
+    showPremiumNotice("🏓 Don\u0027t Stop Playing Now! You\u0027ve finished your 2 free games. Keep the rallies going with unlimited Pickle Pop Arcade for just $2.99/month. Cancel anytime.", true);
   }
   document.getElementById("premiumBtn")?.addEventListener("click", handlePremiumClick);
   document.getElementById("restorePurchasesBtn")?.addEventListener("click", async () => {
