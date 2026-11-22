@@ -11,7 +11,7 @@ function showPremiumNotice(message, offerCheckout = false) {
     action.onclick=()=>{n.remove();document.getElementById("premiumBtn")?.click();};
     n.appendChild(action);
   }
-  const b=document.createElement("button");b.textContent="Not now";b.style.cssText="padding:8px;margin-left:10px";b.onclick=()=>n.remove();n.appendChild(b);
+  const b=document.createElement("button");b.type="button";b.textContent="Maybe later";b.style.cssText="display:block;margin:5px auto 0;padding:4px;background:transparent;border:0;box-shadow:none;color:#c6d2d9;font:400 11px system-ui;text-decoration:underline;cursor:pointer";b.onclick=()=>n.remove();n.appendChild(b);
 }
 (() => {
   "use strict";
